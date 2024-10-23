@@ -27,19 +27,19 @@ export const enqueueUpdateQueue = <Action>(
 
 export const processUpdateQueue = <State>(
 	baseState: State,
-	pendintUpdate: Update<State> | null
+	pendingUpdate: Update<State> | null
 ): {
 	memoziedState: State;
 } => {
 	const result: ReturnType<typeof processUpdateQueue<State>> = {
 		memoziedState: baseState
 	};
-	if (pendintUpdate !== null) {
-		if (pendintUpdate.action instanceof Function) {
+	if (pendingUpdate !== null) {
+		if (pendingUpdate.action instanceof Function) {
 			// baseState 1 update  (prevState) => 2 * prevState
-			result.memoziedState = pendintUpdate.action(baseState);
+			result.memoziedState = pendingUpdate.action(baseState);
 		} else {
-			result.memoziedState = pendintUpdate.action;
+			result.memoziedState = pendingUpdate.action;
 		}
 	}
 
