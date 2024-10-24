@@ -44,7 +44,12 @@ function renderRoot(root: FiberRootNode) {
 			}
 			workInProgess = null;
 		}
-	} while (workInProgess !== null);
+	} while (true);
+
+	const finishedWork = root.current.alternate;
+	root.finishedWork = finishedWork;
+	// wip fiberNode树中的flags执行
+	commintRoot(root);
 }
 
 function workLoop() {
@@ -61,7 +66,7 @@ function performUnitOfWork(fiber: FiberNode) {
 		workInProgess = next;
 	} else {
 		// 没有子节点完成当前节点继续遍历兄弟节点
-		completeUnitOfWork(next);
+		completeUnitOfWork(fiber);
 	}
 }
 

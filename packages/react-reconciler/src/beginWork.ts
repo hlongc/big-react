@@ -21,6 +21,8 @@ export function beginWork(wip: FiberNode) {
 			}
 			break;
 	}
+
+	return null;
 }
 
 function updateHostRoot(wip: FiberNode) {
@@ -33,7 +35,7 @@ function updateHostRoot(wip: FiberNode) {
 	const { memoziedState } = processUpdateQueue(baseState, pendingUpdate);
 	wip.memoziedState = memoziedState;
 
-	const nextChilren = memoziedState;
+	const nextChilren = wip.memoziedState;
 	reconcileChildren(wip, nextChilren);
 
 	return wip.child;
