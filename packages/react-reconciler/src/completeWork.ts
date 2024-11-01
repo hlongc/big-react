@@ -1,5 +1,6 @@
 import {
 	appendInitialChild,
+	Container,
 	createInstance,
 	createTextInstance
 } from 'hostConfig';
@@ -60,7 +61,7 @@ export function completeWork(wip: FiberNode) {
  *    </B>
  * </div>
  */
-function appendAllChildren(returnFiber: FiberNode, wip: FiberNode) {
+function appendAllChildren(returnFiber: Container, wip: FiberNode) {
 	let node = wip.child;
 
 	while (node !== null) {

@@ -26,16 +26,16 @@ export function beginWork(wip: FiberNode) {
 }
 
 function updateHostRoot(wip: FiberNode) {
-	const baseState = wip.memoziedState;
+	const baseState = wip.memoziedState as Element;
 	const updateQueue = wip.updateQueue as UpdateQueue<Element>;
-	const pendingUpdate = updateQueue.shared.pending;
+	const pending = updateQueue.shared.pending;
 	// 重置更新队列
 	updateQueue.shared.pending = null;
 	// 计算出最新的值
-	const { memoziedState } = processUpdateQueue(baseState, pendingUpdate);
+	const { memoziedState } = processUpdateQueue<Element>(baseState, pending);
 	wip.memoziedState = memoziedState;
 
-	const nextChilren = wip.memoziedState;
+	const nextChilren = wip.memoziedState as ReactElementType;
 	reconcileChildren(wip, nextChilren);
 
 	return wip.child;
