@@ -65,7 +65,7 @@ export class FiberRootNode {
 		// hostRootFiber指的是container
 		this.container = container;
 		this.current = hostRootFiber;
-		this.current.stateNode = this;
+		hostRootFiber.stateNode = this;
 		this.finishedWork = null;
 	}
 }
