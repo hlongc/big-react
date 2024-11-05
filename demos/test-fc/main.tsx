@@ -1,15 +1,12 @@
+import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 
-function Child() {
-	return <span>hello</span>;
-}
+console.log(import.meta.hot);
 
 function App() {
-	return (
-		<div>
-			<Child />
-		</div>
-	);
+	const [num, setNum] = useState<number>(1);
+	window.setNum = setNum;
+	return <div>{num}</div>;
 }
 
 createRoot(document.getElementById('root')!).render(<App />);
