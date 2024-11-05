@@ -32,5 +32,6 @@ export function updateContainer(
 	);
 
 	scheduleUpdateOnFiber(hostRootFiber);
+
 	return element;
 }

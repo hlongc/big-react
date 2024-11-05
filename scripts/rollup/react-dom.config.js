@@ -14,17 +14,17 @@ export default [
 		output: [
 			{
 				file: `${pkgDistPath}/index.js`,
-				name: 'index.js',
+				name: 'ReactDom',
 				format: 'umd'
 			},
 			{
 				file: `${pkgDistPath}/client.js`,
-				name: 'client.js',
+				name: 'client',
 				format: 'umd'
 			}
 		],
 		// 不要把react也打包进去，否则无法实现数据共享层的唯一性
-		externals: [...Object.keys(peerDependencies)],
+		external: [...Object.keys(peerDependencies)],
 		plugins: [
 			...getBaseRollupPlugin(),
 			alias({
@@ -44,5 +44,18 @@ export default [
 				})
 			})
 		]
+	},
+	// react-test-utils
+	{
+		input: `${pkgPath}/test-utils.ts`,
+		output: [
+			{
+				file: `${pkgDistPath}/test-utils.js`,
+				name: 'testUtils',
+				format: 'umd'
+			}
+		],
+		external: ['react', 'react-dom'],
+		plugins: getBaseRollupPlugin()
 	}
 ];

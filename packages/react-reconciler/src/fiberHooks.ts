@@ -95,6 +95,7 @@ function mountWorkInProgressHook(): Hook {
 			throw new Error('请在函数组件内执行hook');
 		} else {
 			workInProgressHook = hook;
+			// 把当前hook设置为该fiber节点的第一个hook
 			currentlyRenderingFiber.memoziedState = workInProgressHook;
 		}
 	} else {
