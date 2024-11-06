@@ -24,6 +24,7 @@ export class FiberNode {
 	memoizedProps: Props;
 	memoziedState: unknown;
 	updateQueue: unknown;
+	deletion: FiberNode[] | null;
 
 	alternate: FiberNode | null;
 	flags: Flags;
@@ -46,6 +47,8 @@ export class FiberNode {
 		this.memoizedProps = null;
 		this.memoziedState = null;
 		this.updateQueue = null;
+		/** 需要删除的子节点 */
+		this.deletion = null;
 
 		this.alternate = null;
 		// 副作用
@@ -86,6 +89,7 @@ export function createWornInProgress(current: FiberNode, pendingProps: Props) {
 		wip.pendingProps = pendingProps;
 		wip.flags = NoFlags;
 		wip.subtreeFlags = NoFlags;
+		wip.deletion = null;
 	}
 
 	wip.type = current.type;
