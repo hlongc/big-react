@@ -104,7 +104,7 @@ function commitDeletion(childToDelete: FiberNode) {
 	});
 	// 移出rootHostNode的DOM节点
 	if (rootHostNode !== null) {
-		const hostParent = getHostParent(rootHostNode);
+		const hostParent = getHostParent(childToDelete);
 		if (hostParent) {
 			removeChild((rootHostNode as FiberNode).stateNode, hostParent);
 		}
@@ -134,26 +134,17 @@ function commitNestedComponent(
 				// 向上回溯到了根节点就不处理了
 				return;
 			}
-			// TODO:这种写法不好理解
-			// while (node.sibling === null) {
-			// 	if (node.return === null || node.return === root) {
-			// 		return;
-			// 	}
-			// 	// 向上回溯
-			// 	node = node?.return;
-			// }
-
-			// node.sibling.return = node.return;
-			// node = node.sibling;
-
-			if (node.sibling) {
-				// 遍历兄弟节点
-				node.sibling.return = node.return;
-				node = node.sibling;
-				continue;
+			// 如果没有兄弟节点就处理父节点
+			while (node.sibling === null) {
+				if (node.return === null || node.return === root) {
+					return;
+				}
+				// 向上回溯
+				node = node?.return;
 			}
-			// 回到父节点
-			node = node.return;
+
+			node.sibling.return = node.return;
+			node = node.sibling;
 		}
 	}
 }

@@ -27,6 +27,7 @@ interface Hook {
 export function renderWithHook(wip: FiberNode) {
 	// 赋值
 	currentlyRenderingFiber = wip;
+	// 重置hooks链表
 	wip.memoziedState = null;
 
 	const current = wip.alternate;
@@ -43,6 +44,8 @@ export function renderWithHook(wip: FiberNode) {
 	const children = Component(props);
 	// 重置
 	currentlyRenderingFiber = null;
+	workInProgressHook = null;
+	currentHook = null;
 	return children;
 }
 
