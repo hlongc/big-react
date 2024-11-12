@@ -5,8 +5,22 @@ console.log(import.meta.hot);
 
 function App() {
 	const [num, setNum] = useState<number>(1);
-	window.setNum = setNum;
-	return num === 3 ? <Child /> : num;
+
+	return (
+		<button
+			onClickCapture={(e) => {
+				setNum((prev) => prev + 1);
+				console.log('捕获阶段');
+				e.stopPropagation();
+			}}
+			onClick={() => {
+				console.log('冒泡阶段');
+				setNum((prev) => prev + 1);
+			}}
+		>
+			{num}
+		</button>
+	);
 }
 
 function Child() {
