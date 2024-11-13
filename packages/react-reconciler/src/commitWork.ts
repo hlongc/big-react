@@ -2,6 +2,8 @@ import {
 	appendChildToContainer,
 	commitUpdate,
 	Container,
+	insertChildToContainer,
+	Instance,
 	removeChild
 } from 'hostConfig';
 import { FiberNode, FiberRootNode } from './fiber';
@@ -150,16 +152,57 @@ function commitNestedComponent(
 }
 
 function commitPlacement(finishedWork: FiberNode) {
-	// parent DOM
 	// finishedWork DOM
 	if (__DEV__) {
 		console.log('执行placement操作', finishedWork);
 	}
 	// 得到父节点
+	// parent DOM
 	const hostParent = getHostParent(finishedWork);
+
+	// host sibling
+	const sibling = getHostSibling(finishedWork);
 	if (hostParent !== null) {
 		// 把当前fiber真实dom插入父节点
-		appendPlacementNodeIntoContainer(finishedWork, hostParent);
+		insertOrAppendPlacementNodeIntoContainer(finishedWork, hostParent, sibling);
+	}
+}
+
+function getHostSibling(fiber: FiberNode) {
+	let node: FiberNode = fiber;
+	findSibling: while (true) {
+		while (node.sibling === null) {
+			const parent = node.return;
+
+			if (
+				parent === null ||
+				parent.tag === HostText ||
+				parent.tag === HostComponent
+			) {
+				return null;
+			}
+			node = parent;
+		}
+
+		node.sibling.return = node.return;
+		node = node.sibling;
+
+		while (![HostText, HostComponent].includes(node.tag)) {
+			// 向下遍历
+			if ((node.flags & Placemement) !== NoFlags) {
+				continue findSibling;
+			}
+			if (node.child === null) {
+				continue findSibling;
+			} else {
+				node.child.return = node;
+				node = node.child;
+			}
+		}
+		// 找到了HostText、HostComponent并且是稳定的节点就返回
+		if ((node.flags & Placemement) === NoFlags) {
+			return node.stateNode;
+		}
 	}
 }
 
@@ -186,25 +229,31 @@ function getHostParent(fiber: FiberNode): Container | null {
 }
 
 // 将真实dom添加到父节点中
-function appendPlacementNodeIntoContainer(
+function insertOrAppendPlacementNodeIntoContainer(
 	finishedWork: FiberNode,
-	hostParent: Container
+	hostParent: Container,
+	before?: Instance
 ) {
 	const tag = finishedWork.tag;
 	// 如果当前节点就是真实节点，那么就直接插入
 	if ([HostComponent, HostText].includes(tag)) {
-		// div 和文本节点
-		appendChildToContainer(hostParent, finishedWork.stateNode);
+		if (before) {
+			insertChildToContainer(hostParent, finishedWork.stateNode, before);
+		} else {
+			// div 和文本节点
+			appendChildToContainer(hostParent, finishedWork.stateNode);
+		}
+
 		return;
 	}
 	// 否则往下面找到真实dom
 	const child = finishedWork.child;
 	if (child !== null) {
 		// 完成child以后把child的兄弟节点也完成
-		appendPlacementNodeIntoContainer(child, hostParent);
+		insertOrAppendPlacementNodeIntoContainer(child, hostParent);
 		let sibling = child.sibling;
 		while (sibling !== null) {
-			appendPlacementNodeIntoContainer(sibling, hostParent);
+			insertOrAppendPlacementNodeIntoContainer(sibling, hostParent);
 			sibling = sibling.sibling;
 		}
 	}
