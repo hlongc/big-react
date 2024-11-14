@@ -82,7 +82,7 @@ function triggerFlowCallback(cbList: EventCallback[], se: SyntheticEvent) {
 	}
 }
 
-function getCallbackEventNameFormEventType(eventType: string) {
+function getCallbackEventNameFromEventType(eventType: string) {
 	return {
 		click: ['onClickCapture', 'onClick']
 	}[eventType];
@@ -101,7 +101,7 @@ function collectionPaths(
 	while (targetElement && targetElement !== container) {
 		const elementProps = targetElement[elementPropsKey];
 		if (elementProps) {
-			const callbackList = getCallbackEventNameFormEventType(eventType);
+			const callbackList = getCallbackEventNameFromEventType(eventType);
 			if (callbackList) {
 				callbackList.forEach((cbName, index) => {
 					const eventCb = elementProps[cbName];

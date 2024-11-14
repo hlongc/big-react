@@ -9,6 +9,19 @@ function App() {
 		num % 2 === 0
 			? [<li key="1">1</li>, <li key="2">2</li>, <li key="3">3</li>]
 			: [<li key="3">3</li>, <li key="2">2</li>, <li key="1">1</li>];
+
+	return (
+		<ul
+			onClick={() => {
+				console.log('冒泡阶段');
+				setNum((prev) => prev + 1);
+			}}
+		>
+			<li>5</li>
+			<li>4</li>
+			{arr}
+		</ul>
+	);
 	return (
 		<div>
 			<button

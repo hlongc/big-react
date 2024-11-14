@@ -2,6 +2,7 @@ import { ReactElementType } from 'shared/ReactTypes';
 import { FiberNode } from './fiber';
 import { processUpdateQueue, UpdateQueue } from './updateQueue';
 import {
+	Fragment,
 	FunctionComponent,
 	HostComponent,
 	HostRoot,
@@ -22,6 +23,8 @@ export function beginWork(wip: FiberNode) {
 			return updateFunctionComponent(wip);
 		case HostText:
 			return null;
+		case Fragment:
+			return updateFragment(wip);
 
 		default:
 			if (__DEV__) {
@@ -31,6 +34,14 @@ export function beginWork(wip: FiberNode) {
 	}
 
 	return null;
+}
+
+function updateFragment(wip: FiberNode) {
+	// TODO:为什么不是取wip.pendingProps.children
+	const nextChildren = wip.pendingProps;
+	reconcileChildren(wip, nextChildren);
+
+	return wip.child;
 }
 
 function updateFunctionComponent(wip: FiberNode) {
