@@ -15,11 +15,11 @@ function App() {
 			onClick={() => {
 				console.log('冒泡阶段');
 				setNum((prev) => prev + 1);
+				setNum((prev) => prev + 1);
+				setNum((prev) => prev + 1);
 			}}
 		>
-			<li>5</li>
-			<li>4</li>
-			{arr}
+			{num}
 		</ul>
 	);
 	return (
