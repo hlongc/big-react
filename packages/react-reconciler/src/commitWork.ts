@@ -13,7 +13,7 @@ import {
 	NoFlags,
 	Placemement,
 	Update
-} from './fiberTags';
+} from './fiberFlags';
 import {
 	FunctionComponent,
 	HostComponent,

@@ -12,7 +12,7 @@ import {
 	HostRoot,
 	HostText
 } from './workTags';
-import { NoFlags, Update } from './fiberTags';
+import { NoFlags, Update } from './fiberFlags';
 import { updateFiberProps } from 'react-dom/src/SyntheticEvent';
 
 function markUpdate(fiber: FiberNode) {

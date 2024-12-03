@@ -7,7 +7,7 @@ import {
 } from './fiber';
 import { REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE } from 'shared/ReactSymbols';
 import { Fragment, HostText } from './workTags';
-import { ChildDeletion, Placemement } from './fiberTags';
+import { ChildDeletion, Placemement } from './fiberFlags';
 
 type ExistingChildren = Map<string | number, FiberNode>;
 

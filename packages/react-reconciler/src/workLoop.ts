@@ -11,7 +11,7 @@ import {
 	NoLane,
 	SyncLane
 } from './fiberLanes';
-import { MutationMask, NoFlags } from './fiberTags';
+import { MutationMask, NoFlags } from './fiberFlags';
 import { flushSyncQueue, scheduleSyncQueue } from './syncTaskQueue';
 import { HostRoot } from './workTags';
 
