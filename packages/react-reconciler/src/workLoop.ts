@@ -1,8 +1,22 @@
 import { scheduleMicroTask } from 'hostConfig';
+import {
+	unstable_scheduleCallback as scheduleCallback,
+	unstable_NormalPriority as NormalPriority
+} from 'scheduler';
 import { beginWork } from './beginWork';
-import { commitMutationEffects } from './commitWork';
+import {
+	commitHookEffectListCreate,
+	commitHookEffectListDestroy,
+	commitHookEffectListUnmount,
+	commitMutationEffects
+} from './commitWork';
 import { completeWork } from './completeWork';
-import { createWornInProgress, FiberNode, FiberRootNode } from './fiber';
+import {
+	createWornInProgress,
+	FiberNode,
+	FiberRootNode,
+	PendingPassiveEffects
+} from './fiber';
 import {
 	getHighestPriority,
 	Lane,
@@ -11,12 +25,14 @@ import {
 	NoLane,
 	SyncLane
 } from './fiberLanes';
-import { MutationMask, NoFlags } from './fiberFlags';
+import { MutationMask, NoFlags, PassiveMask } from './fiberFlags';
 import { flushSyncQueue, scheduleSyncQueue } from './syncTaskQueue';
 import { HostRoot } from './workTags';
+import { HookHasEffect, Passive } from './hookEffectTags';
 
 let workInProgess: FiberNode | null = null;
 let wipRootRenderLane: Lane = NoLane;
+let rootDoseHasPassiveEffects = false;
 
 function prepareRefreshStack(root: FiberRootNode, lane: Lane) {
 	workInProgess = createWornInProgress(root.current, {});
@@ -105,6 +121,30 @@ function performSyncWorkOnRoot(root: FiberRootNode, lane: Lane) {
 	commitRoot(root);
 }
 
+function flushPassiveEffects(pendingPassiveEffects: PendingPassiveEffects) {
+	// 先触发所有的unmount effect
+	pendingPassiveEffects.unmount.forEach((effetc) => {
+		commitHookEffectListUnmount(Passive, effetc);
+	});
+	pendingPassiveEffects.unmount = [];
+	// 触发上次更新产生的destroy
+	pendingPassiveEffects.update.forEach((effect) => {
+		commitHookEffectListDestroy(Passive | HookHasEffect, effect);
+	});
+	// 触发本次更新的create
+	pendingPassiveEffects.update.forEach((effect) => {
+		commitHookEffectListCreate(Passive | HookHasEffect, effect);
+	});
+
+	pendingPassiveEffects.update = [];
+	// TODO:  flushSyncCallback
+	// 在回调过程中触发的更新，继续执行，比如setNum(1触发的)
+	// useEffect(() => {
+	// 	setNum(1)
+	// }, [xxx])
+	flushSyncQueue();
+}
+
 function commitRoot(root: FiberRootNode) {
 	const finishedWork = root.finishedWork;
 	if (finishedWork === null) {
@@ -126,6 +166,22 @@ function commitRoot(root: FiberRootNode) {
 
 	markRootFinished(root, lane);
 
+	// 当前组件的useEffect回调是否需要被执行
+	if (
+		(finishedWork.flags & PassiveMask) !== NoFlags ||
+		(finishedWork.subtreeFlags & PassiveMask) !== NoFlags
+	) {
+		if (!rootDoseHasPassiveEffects) {
+			rootDoseHasPassiveEffects = true;
+			// 调度副作用   相当于在setTimeout中执行副作用
+			scheduleCallback(NormalPriority, () => {
+				flushPassiveEffects(root.pendingPassiveEffects);
+				// 执行副作用
+				return;
+			});
+		}
+	}
+
 	const subtreeHasEffect =
 		(finishedWork.subtreeFlags & MutationMask) !== NoFlags;
 	const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
@@ -135,7 +191,7 @@ function commitRoot(root: FiberRootNode) {
 		// beforeMutation
 
 		// mutation Placement
-		commitMutationEffects(finishedWork);
+		commitMutationEffects(finishedWork, root);
 		// current和workInProgress交换
 		root.current = finishedWork;
 
@@ -143,6 +199,9 @@ function commitRoot(root: FiberRootNode) {
 	} else {
 		root.current = finishedWork;
 	}
+
+	rootDoseHasPassiveEffects = false;
+	ensureRootIsSchedule(root);
 }
 
 function workLoop(renderLane: Lane) {

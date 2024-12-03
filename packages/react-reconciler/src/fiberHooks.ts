@@ -32,7 +32,7 @@ export interface Effect {
 	tag: Flags;
 	create: EffectCallback | void;
 	destroy: EffectCallback | void;
-	deps: EffectDeps | void;
+	deps: EffectDeps | null;
 	next: Effect | null;
 }
 
@@ -40,7 +40,7 @@ type EffectCallback = () => void;
 type EffectDeps = any[] | null;
 
 /** 函数组件的updateQueue增加lastEffect，用于保存effect信息 */
-interface FCUpdateQueue<State> extends UpdateQueue<State> {
+export interface FCUpdateQueue<State> extends UpdateQueue<State> {
 	/** lastEffect的next指向firstEffect，是个环状链表 */
 	lastEffect: Effect | null;
 }
@@ -50,6 +50,8 @@ export function renderWithHook(wip: FiberNode, lane: Lane) {
 	currentlyRenderingFiber = wip;
 	// 重置hooks链表
 	wip.memoziedState = null;
+	// 重置effect的链表
+	wip.updateQueue = null;
 	renderLane = lane;
 
 	const current = wip.alternate;
@@ -103,7 +105,7 @@ function pushEffect(
 	hookFlag: Flags,
 	create: EffectCallback | void,
 	destroy: EffectCallback | void,
-	deps: EffectDeps | void
+	deps: EffectDeps | null
 ): Effect {
 	const effect: Effect = {
 		tag: hookFlag,
@@ -145,8 +147,57 @@ function createFCUpdateQueue<State>() {
 	return updateQueue;
 }
 
-function updateEffect() {}
+function updateEffect(create: EffectCallback | void, deps: EffectDeps | void) {
+	const hook = updateWorkInProgressHook();
+	const nextDeps = deps === undefined ? null : deps;
 
+	let destroy: EffectCallback | void;
+
+	if (currentHook !== null) {
+		const prevEffect = currentHook.memoizedState as Effect;
+		destroy = prevEffect.destroy;
+
+		if (nextDeps !== null) {
+			const prevDeps = prevEffect.deps;
+			// 浅比较
+			if (areHookInputsEqual(prevDeps, nextDeps)) {
+				// 如果依赖没变就不触发回调执行
+				hook.memoizedState = pushEffect(Passive, create, destroy, nextDeps);
+				return;
+			}
+		}
+
+		// 浅比较 不相等
+
+		if (currentlyRenderingFiber) {
+			// mount和依赖变化时需要执行回调，所以在mount时打上标记
+			currentlyRenderingFiber.flags |= PassiveEffect;
+			hook.memoizedState = pushEffect(
+				Passive | HookHasEffect,
+				create,
+				destroy,
+				nextDeps
+			);
+		}
+	}
+}
+
+function areHookInputsEqual(
+	prevDeps: EffectDeps | null,
+	nextDeps: EffectDeps | null
+) {
+	if (prevDeps === null || nextDeps === null) {
+		return false;
+	}
+	for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+		if (Object.is(prevDeps[i], nextDeps[i])) {
+			continue;
+		}
+		return false;
+	}
+
+	return true;
+}
 function updateState<State>(): [State, Dispatch<State>] {
 	// 找到当前useState对应的hooks数据
 	const hook = updateWorkInProgressHook();

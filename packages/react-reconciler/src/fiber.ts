@@ -8,6 +8,7 @@ import {
 import { Flags, NoFlags } from './fiberFlags';
 import { Container } from 'hostConfig';
 import { Lane, Lanes, NoLane, NoLanes } from './fiberLanes';
+import { Effect } from './fiberHooks';
 
 export class FiberNode {
 	tag: WorkTag;
@@ -63,6 +64,13 @@ export class FiberNode {
 	}
 }
 
+export interface PendingPassiveEffects {
+	// unmount时执行的destroy回调
+	unmount: Effect[];
+	// update时执行的create回调
+	update: Effect[];
+}
+
 export class FiberRootNode {
 	container: Container;
 	current: FiberNode;
@@ -70,6 +78,7 @@ export class FiberRootNode {
 	finishedWork: FiberNode | null;
 	pendingLanes: Lanes;
 	finishedLane: Lane;
+	pendingPassiveEffects: PendingPassiveEffects;
 
 	constructor(container: Container, hostRootFiber: FiberNode) {
 		// React.createRoot(container).render(<App />)
@@ -80,6 +89,10 @@ export class FiberRootNode {
 		this.finishedWork = null;
 		this.pendingLanes = NoLanes;
 		this.finishedLane = NoLane;
+		this.pendingPassiveEffects = {
+			unmount: [],
+			update: []
+		};
 	}
 }
 
