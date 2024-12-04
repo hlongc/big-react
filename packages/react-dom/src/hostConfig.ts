@@ -45,7 +45,7 @@ export function commitUpdate(fiber: FiberNode) {
 			break;
 
 		case HostComponent:
-			// TODO:更新属性
+			updateFiberProps(fiber.stateNode, fiber.memoizedProps);
 			break;
 
 		default:

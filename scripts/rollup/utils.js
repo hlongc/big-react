@@ -26,5 +26,5 @@ export function getBaseRollupPlugin({
 	alias = { __DEV__: true, preventAssignment: true },
 	typescript = {}
 } = {}) {
-	return [replace(alias), cmj(), ts()];
+	return [replace(alias), cmj(), ts(typescript)];
 }

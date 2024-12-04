@@ -2,7 +2,8 @@ import {
 	appendInitialChild,
 	Container,
 	createInstance,
-	createTextInstance
+	createTextInstance,
+	Instance
 } from 'hostConfig';
 import { FiberNode } from './fiber';
 import {
@@ -13,7 +14,6 @@ import {
 	HostText
 } from './workTags';
 import { NoFlags, Update } from './fiberFlags';
-import { updateFiberProps } from 'react-dom/src/SyntheticEvent';
 
 function markUpdate(fiber: FiberNode) {
 	fiber.flags |= Update;
@@ -35,7 +35,7 @@ export function completeWork(wip: FiberNode) {
 				// n项：属性名 n+1项：属性值
 				// wip.updateQueue = ['className', 'aaa', 'title', 'hello'];
 				// 2.打上update flag
-				updateFiberProps(wip.stateNode, nextProps);
+				markUpdate(wip);
 			} else {
 				// 1.构建DOM
 				const instance = createInstance(wip.type, nextProps);
@@ -84,7 +84,7 @@ export function completeWork(wip: FiberNode) {
  *    </B>
  * </div>
  */
-function appendAllChildren(returnFiber: Container, wip: FiberNode) {
+function appendAllChildren(returnFiber: Container | Instance, wip: FiberNode) {
 	let node = wip.child;
 
 	while (node !== null) {
