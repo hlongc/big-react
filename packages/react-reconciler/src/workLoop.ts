@@ -43,11 +43,11 @@ export function scheduleUpdateOnFiber(fiber: FiberNode, lane: Lane) {
 	// 调度功能
 	const root = markUpdateFromFiberToRoot(fiber);
 	markRootUpdated(root, lane);
-	ensureRootIsSchedule(root);
+	ensureRootIsScheduled(root);
 }
 
 // schedule阶段入口
-function ensureRootIsSchedule(root: FiberRootNode) {
+function ensureRootIsScheduled(root: FiberRootNode) {
 	// 找出优先级最高的lane
 	const updateLane = getHighestPriority(root.pendingLanes);
 	if (updateLane === NoLane) {
@@ -92,7 +92,7 @@ function performSyncWorkOnRoot(root: FiberRootNode, lane: Lane) {
 	const nextLane = getHighestPriority(root.pendingLanes);
 
 	if (nextLane !== SyncLane) {
-		ensureRootIsSchedule(root);
+		ensureRootIsScheduled(root);
 		return;
 	}
 
@@ -201,7 +201,7 @@ function commitRoot(root: FiberRootNode) {
 	}
 
 	rootDoseHasPassiveEffects = false;
-	ensureRootIsSchedule(root);
+	ensureRootIsScheduled(root);
 }
 
 function workLoop(renderLane: Lane) {

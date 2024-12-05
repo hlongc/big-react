@@ -1,0 +1,16 @@
+#wrapper {
+	word-break: break-all;
+}
+
+.sp1 {
+	color: red;
+}
+.sp2 {
+	color: chocolate;
+}
+.sp3 {
+	color: darkturquoise;
+}
+.sp4 {
+	color: gray;
+}
