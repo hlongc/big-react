@@ -4,7 +4,7 @@ let syncQueue: Callback[] | null = null;
 // 是否正在执行同步任务
 let isFlushingSyncQueue = false;
 
-export function scheduleSyncQueue(callback: Callback) {
+export function scheduleSyncCallback(callback: Callback) {
 	if (syncQueue === null) {
 		syncQueue = [callback];
 	} else {
@@ -12,7 +12,7 @@ export function scheduleSyncQueue(callback: Callback) {
 	}
 }
 
-export function flushSyncQueue() {
+export function flushSyncCallbacks() {
 	if (!isFlushingSyncQueue && syncQueue) {
 		isFlushingSyncQueue = true;
 		try {

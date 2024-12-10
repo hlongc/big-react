@@ -42,7 +42,7 @@ export function markRootFinished(root: FiberRootNode, lane: Lane) {
 	root.pendingLanes &= ~lane;
 }
 
-function lanesToSchedulerPriority(lanes: Lanes) {
+export function lanesToSchedulerPriority(lanes: Lanes) {
 	const lane = getHighestPriority(lanes);
 	if (lane === SyncLane) {
 		return unstable_ImmediatePriority;
@@ -56,7 +56,7 @@ function lanesToSchedulerPriority(lanes: Lanes) {
 	return unstable_IdlePriority;
 }
 
-function schedulerPriorityToLane(schedulerPriority: number) {
+export function schedulerPriorityToLane(schedulerPriority: number) {
 	if (schedulerPriority === unstable_ImmediatePriority) {
 		return SyncLane;
 	}
