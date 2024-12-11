@@ -71,6 +71,8 @@ function ensureRootIsScheduled(root: FiberRootNode) {
 		if (existingCallback !== null) {
 			unstable_cancelCallback(existingCallback);
 		}
+		root.callbackNode = null;
+		root.callbackPriority = NoLane;
 		return;
 	}
 

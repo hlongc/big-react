@@ -6,6 +6,7 @@ import {
 	createUpdateQueue,
 	enqueueUpdateQueue,
 	processUpdateQueue,
+	Update,
 	UpdateQueue
 } from './updateQueue';
 import { Action } from 'shared/ReactTypes';
@@ -26,6 +27,8 @@ interface Hook {
 	memoizedState: any;
 	updateQueue: unknown;
 	next: Hook | null;
+	baseState: any;
+	baseQueue: Update<any> | null;
 }
 
 export interface Effect {
@@ -204,16 +207,39 @@ function updateState<State>(): [State, Dispatch<State>] {
 
 	// 计算新state的逻辑
 	const queue = hook.updateQueue as UpdateQueue<State>;
+	const baseState = hook.baseState;
+
 	const pending = queue.shared.pending;
-	queue.shared.pending = null;
+	const current = currentHook as Hook;
+	let baseQueue = current.baseQueue;
 
 	if (pending !== null) {
-		const { memoziedState } = processUpdateQueue<State>(
-			hook.memoizedState,
-			pending,
-			renderLane
-		);
-		hook.memoizedState = memoziedState;
+		// pending、baseQueue，update保存在current
+		if (baseQueue !== null) {
+			// 合并跳过的update和即将调度的update
+			const baseFirst = baseQueue.next;
+			const pendingFirst = pending.next;
+
+			baseQueue.next = pendingFirst;
+			pending.next = baseFirst;
+		}
+
+		baseQueue = pending;
+		// 保存在current中，下次计算继续执行跳过的update
+		current.baseQueue = pending;
+		queue.shared.pending = null;
+
+		if (baseQueue !== null) {
+			const {
+				memoziedState,
+				baseQueue: newBaseQueue,
+				baseState: newBaseState
+			} = processUpdateQueue<State>(baseState, baseQueue, renderLane);
+
+			hook.memoizedState = memoziedState;
+			hook.baseState = newBaseState;
+			hook.baseQueue = newBaseQueue;
+		}
 	}
 
 	return [hook.memoizedState, queue.dispatch as Dispatch<State>];
@@ -286,7 +312,9 @@ function updateWorkInProgressHook(): Hook {
 	const newHook: Hook = {
 		memoizedState: currentHook.memoizedState,
 		updateQueue: currentHook.updateQueue,
-		next: null
+		next: null,
+		baseQueue: currentHook.baseQueue,
+		baseState: currentHook.baseState
 	};
 
 	if (workInProgressHook === null) {
@@ -312,7 +340,9 @@ function mountWorkInProgressHook(): Hook {
 	const hook: Hook = {
 		memoizedState: null,
 		next: null,
-		updateQueue: null
+		updateQueue: null,
+		baseQueue: null,
+		baseState: null
 	};
 
 	if (workInProgressHook === null) {

@@ -78,6 +78,7 @@ function dispatchEvent(container: Container, eventType: string, e: Event) {
 }
 
 function triggerFlowCallback(cbList: EventCallback[], se: SyntheticEvent) {
+	console.log('触发回调');
 	for (let i = 0; i < cbList.length; i++) {
 		const callback = cbList[i];
 		// 用不同的优先级去调度回调
@@ -137,6 +138,7 @@ function eventTypeToSchedulerPriority(eventType: string) {
 		case 'click':
 		case 'keydown':
 		case 'keyup':
+			console.log('点击事件');
 			return unstable_ImmediatePriority;
 		case 'scroll':
 			return unstable_UserBlockingPriority;
