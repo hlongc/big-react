@@ -1,3 +1,4 @@
+import currentBatchConfig from './src/currentBatchConfig';
 import currentDispatcher, {
 	Dispatcher,
 	resolveDispatcher
@@ -15,14 +16,21 @@ const useEffect: Dispatcher['useEffect'] = (create, deps) => {
 	return dispatcher.useEffect(create, deps);
 };
 
+const useTransition: Dispatcher['useTransition'] = () => {
+	const dispatcher = resolveDispatcher();
+	return dispatcher.useTransition();
+};
+
 // 内部数据共享层
 const __SECRET_INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
-	currentDispatcher
+	currentDispatcher,
+	currentBatchConfig
 };
 
 export {
 	useState,
 	useEffect,
+	useTransition,
 	__SECRET_INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
 };
 

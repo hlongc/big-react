@@ -5,25 +5,33 @@ import {
 	unstable_NormalPriority,
 	unstable_UserBlockingPriority
 } from 'scheduler';
+import { __SECRET_INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED } from 'react';
 import { FiberRootNode } from './fiber';
 
 export type Lane = number;
 
 export type Lanes = number;
 // 数值越低，优先级越高
-export const SyncLane = 0b0001;
+export const SyncLane = 0b00001;
 /** 连续性的动作，比如拖拽 */
-export const InputContinuousLane = 0b0010;
-export const DefaultLane = 0b0100;
-export const IdleLane = 0b1000;
-export const NoLane = 0b0000;
-export const NoLanes = 0b0000;
+export const InputContinuousLane = 0b00010;
+export const DefaultLane = 0b00100;
+export const TransitionLane = 0b01000;
+export const IdleLane = 0b10000;
+export const NoLane = 0b00000;
+export const NoLanes = 0b00000;
 
 export function mergeLanes(a: Lane, b: Lane): Lanes {
 	return a | b;
 }
 
 export function requestUpdateLane(): Lane {
+	const isTransition =
+		__SECRET_INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.currentBatchConfig
+			.transition !== null;
+	if (isTransition) {
+		return TransitionLane;
+	}
 	// 从上下文环境获取
 	const currentSchedulerPriority = unstable_getCurrentPriorityLevel();
 	// 两个优先级模型转换
