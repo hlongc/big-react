@@ -209,13 +209,13 @@ function ChildReconciler(shouldTrackEffects: boolean) {
 		const before = existingChildren.get(keyToUse);
 
 		// HostText
-		if (['number', 'string'].includes(element.type)) {
+		if (['number', 'string'].includes(typeof element)) {
 			if (before?.tag === HostText) {
 				// 如果可以复用，就把老的从缓存里面删掉，因为缓存里面最终剩下的是需要删除的
 				existingChildren.delete(keyToUse);
 				return useFiber(before, { content: element + '' });
 			} else {
-				return new FiberNode(HostText, { content: element }, null);
+				return new FiberNode(HostText, { content: element + '' }, null);
 			}
 		}
 
