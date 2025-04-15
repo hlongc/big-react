@@ -2,6 +2,7 @@ import { ReactElementType } from 'shared/ReactTypes';
 import { FiberNode } from './fiber';
 import { processUpdateQueue, UpdateQueue } from './updateQueue';
 import {
+	ContextProvider,
 	Fragment,
 	FunctionComponent,
 	HostComponent,
@@ -12,6 +13,7 @@ import { mountChildren, reconcilerChildren } from './childFibers';
 import { renderWithHook } from './fiberHooks';
 import { Lane } from './fiberLanes';
 import { Ref } from './fiberFlags';
+import { pushContext } from './fiberContext';
 
 export function beginWork(wip: FiberNode, renderLane: Lane) {
 	// 递归中的递 返回子节点
@@ -27,6 +29,8 @@ export function beginWork(wip: FiberNode, renderLane: Lane) {
 			return null;
 		case Fragment:
 			return updateFragment(wip);
+		case ContextProvider:
+			return updateContextProvider(wip);
 
 		default:
 			if (__DEV__) {
@@ -36,6 +40,19 @@ export function beginWork(wip: FiberNode, renderLane: Lane) {
 	}
 
 	return null;
+}
+
+function updateContextProvider(wip: FiberNode) {
+	const providerType = wip.type;
+	const context = providerType._context;
+
+	const newProps = wip.pendingProps;
+	const nextChildren = newProps.children;
+
+	pushContext(context, newProps.value);
+	reconcileChildren(wip, nextChildren);
+
+	return wip.child;
 }
 
 function updateFragment(wip: FiberNode) {

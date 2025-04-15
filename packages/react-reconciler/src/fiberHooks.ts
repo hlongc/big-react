@@ -15,6 +15,7 @@ import { scheduleUpdateOnFiber } from './workLoop';
 import { Lane, NoLane, requestUpdateLane } from './fiberLanes';
 import { Flags, PassiveEffect } from './fiberFlags';
 import { HookHasEffect, Passive } from './hookEffectTags';
+import { ContextType } from 'react';
 
 const { currentBatchConfig } =
 	__SECRET_INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
@@ -85,7 +86,8 @@ const HooksDispatcherOnMount: Dispatcher = {
 	useState: mountState,
 	useEffect: mountEffect,
 	useTransition: mountTransition,
-	useRef: mountRef
+	useRef: mountRef,
+	useContext: readContext
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -412,4 +414,12 @@ function mountWorkInProgressHook(): Hook {
 	}
 
 	return hook;
+}
+
+function readContext<T>(context: ContextType<T>): T {
+	const fiber = currentlyRenderingFiber;
+	if (!fiber) {
+		throw new Error('不能在组件和hook外部使用useContext');
+	}
+	return context._currentValue;
 }

@@ -5,6 +5,7 @@ import currentDispatcher, {
 } from './src/currentDispatcher';
 import { jsx, jsxDEV } from './src/jsx';
 export { isValidElement } from './src/jsx';
+export { createContext } from './context';
 
 const useState: Dispatcher['useState'] = (initialState) => {
 	const dispatcher = resolveDispatcher();
@@ -26,6 +27,11 @@ const useRef: Dispatcher['useRef'] = (initialValue) => {
 	return dispatcher.useRef(initialValue);
 };
 
+const useContext: Dispatcher['useContext'] = (context) => {
+	const dispatcher = resolveDispatcher();
+	return dispatcher.useContext(context);
+};
+
 // 内部数据共享层
 const __SECRET_INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
 	currentDispatcher,
@@ -37,6 +43,7 @@ export {
 	useEffect,
 	useTransition,
 	useRef,
+	useContext,
 	__SECRET_INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
 };
 
