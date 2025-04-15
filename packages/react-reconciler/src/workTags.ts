@@ -4,7 +4,9 @@ export type WorkTag =
 	| typeof HostComponent
 	| typeof HostText
 	| typeof Fragment
-	| typeof ContextProvider;
+	| typeof ContextProvider
+	| typeof SuspenseComponent
+	| typeof OffScreenComponent;
 
 // 不同的jsx类型
 export const FunctionComponent = 0;
@@ -14,3 +16,6 @@ export const HostComponent = 5;
 export const HostText = 6;
 export const Fragment = 7;
 export const ContextProvider = 8;
+
+export const SuspenseComponent = 13;
+export const OffScreenComponent = 14;

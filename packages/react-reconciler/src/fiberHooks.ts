@@ -10,12 +10,14 @@ import {
 	Update,
 	UpdateQueue
 } from './updateQueue';
-import { Action } from 'shared/ReactTypes';
+import { Action, ReactContext, Thenable, Usable } from 'shared/ReactTypes';
 import { scheduleUpdateOnFiber } from './workLoop';
 import { Lane, NoLane, requestUpdateLane } from './fiberLanes';
 import { Flags, PassiveEffect } from './fiberFlags';
 import { HookHasEffect, Passive } from './hookEffectTags';
 import { ContextType } from 'react';
+import { trackUsedThenable } from './thenable';
+import { REACT_CONTEXT_TYPE } from 'shared/ReactSymbols';
 
 const { currentBatchConfig } =
 	__SECRET_INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
@@ -87,14 +89,17 @@ const HooksDispatcherOnMount: Dispatcher = {
 	useEffect: mountEffect,
 	useTransition: mountTransition,
 	useRef: mountRef,
-	useContext: readContext
+	useContext: readContext,
+	use
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
 	useState: updateState,
 	useEffect: updateEffect,
 	useTransition: updateTransition,
-	useRef: updateRef
+	useRef: updateRef,
+	useContext: readContext,
+	use
 };
 
 function mountEffect(create: EffectCallback | void, deps: EffectDeps | void) {
@@ -422,4 +427,18 @@ function readContext<T>(context: ContextType<T>): T {
 		throw new Error('不能在组件和hook外部使用useContext');
 	}
 	return context._currentValue;
+}
+
+function use<T>(usable: Usable<T>): T {
+	if (typeof usable === 'object' && usable !== null) {
+		if (typeof (usable as Thenable<T>).then === 'function') {
+			const thenable = usable as Thenable<T>;
+			return trackUsedThenable(thenable);
+		} else if ((usable as ReactContext<T>).$$typeof === REACT_CONTEXT_TYPE) {
+			const context = usable as ReactContext<T>;
+			return readContext(context);
+		}
+	}
+
+	throw new TypeError('不支持的类型' + usable);
 }

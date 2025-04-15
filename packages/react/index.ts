@@ -1,3 +1,4 @@
+import { Usable } from 'shared/ReactTypes';
 import currentBatchConfig from './src/currentBatchConfig';
 import currentDispatcher, {
 	Dispatcher,
@@ -6,6 +7,7 @@ import currentDispatcher, {
 import { jsx, jsxDEV } from './src/jsx';
 export { isValidElement } from './src/jsx';
 export { createContext } from './context';
+export { REACT_SUSPENSE_TYPE as Suspense } from 'shared/ReactSymbols';
 
 const useState: Dispatcher['useState'] = (initialState) => {
 	const dispatcher = resolveDispatcher();
@@ -32,6 +34,11 @@ const useContext: Dispatcher['useContext'] = (context) => {
 	return dispatcher.useContext(context);
 };
 
+const use: Dispatcher['use'] = (usable) => {
+	const dispatcher = resolveDispatcher();
+	return dispatcher.use(usable);
+};
+
 // 内部数据共享层
 const __SECRET_INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
 	currentDispatcher,
@@ -44,6 +51,7 @@ export {
 	useTransition,
 	useRef,
 	useContext,
+	use,
 	__SECRET_INTERNAL_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
 };
 
