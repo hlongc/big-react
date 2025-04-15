@@ -13,10 +13,14 @@ import {
 	HostRoot,
 	HostText
 } from './workTags';
-import { NoFlags, Update } from './fiberFlags';
+import { NoFlags, Ref, Update } from './fiberFlags';
 
 function markUpdate(fiber: FiberNode) {
 	fiber.flags |= Update;
+}
+
+function markRef(fiber: FiberNode) {
+	fiber.flags |= Ref;
 }
 
 export function completeWork(wip: FiberNode) {
@@ -36,12 +40,20 @@ export function completeWork(wip: FiberNode) {
 				// wip.updateQueue = ['className', 'aaa', 'title', 'hello'];
 				// 2.打上update flag
 				markUpdate(wip);
+				// 标记ref
+				if (wip.ref !== current.ref) {
+					markRef(wip);
+				}
 			} else {
 				// 1.构建DOM
 				const instance = createInstance(wip.type, nextProps);
 				// 2.将DOM插入DOM树
 				appendAllChildren(instance, wip);
 				wip.stateNode = instance;
+				// 标记ref
+				if (wip.ref !== null) {
+					markRef(wip);
+				}
 			}
 			bubbleProperties(wip);
 			break;

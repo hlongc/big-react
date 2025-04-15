@@ -11,6 +11,7 @@ import {
 import { mountChildren, reconcilerChildren } from './childFibers';
 import { renderWithHook } from './fiberHooks';
 import { Lane } from './fiberLanes';
+import { Ref } from './fiberFlags';
 
 export function beginWork(wip: FiberNode, renderLane: Lane) {
 	// 递归中的递 返回子节点
@@ -76,6 +77,8 @@ function updateHostComponent(wip: FiberNode) {
 	// HostComponent无法自己更新，所以不需要计算最新值，直接生成子fiber
 	const nextProps = wip.pendingProps;
 	const nextChildren = nextProps.children;
+	// 更新ref
+	markRef(wip.alternate, wip);
 	reconcileChildren(wip, nextChildren);
 
 	return wip.child;
@@ -91,5 +94,16 @@ function reconcileChildren(wip: FiberNode, children?: ReactElementType) {
 	} else {
 		// mount
 		wip.child = mountChildren(wip, null, children);
+	}
+}
+// 标记更新ref
+function markRef(currentFiber: FiberNode | null, workInProgess: FiberNode) {
+	const ref = workInProgess.ref;
+	// 初次挂载或者后续更新ref引用发生变化时才标记
+	if (
+		(currentFiber === null && ref !== null) ||
+		(currentFiber !== null && ref !== currentFiber.ref)
+	) {
+		workInProgess.flags |= Ref;
 	}
 }

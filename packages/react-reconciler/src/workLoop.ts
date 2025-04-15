@@ -11,6 +11,7 @@ import {
 	commitHookEffectListCreate,
 	commitHookEffectListDestroy,
 	commitHookEffectListUnmount,
+	commitLayoutEffects,
 	commitMutationEffects
 } from './commitWork';
 import { completeWork } from './completeWork';
@@ -306,17 +307,21 @@ function commitRoot(root: FiberRootNode) {
 	}
 
 	const subtreeHasEffect =
-		(finishedWork.subtreeFlags & MutationMask) !== NoFlags;
-	const rootHasEffect = (finishedWork.flags & MutationMask) !== NoFlags;
+		(finishedWork.subtreeFlags & (MutationMask | PassiveMask)) !== NoFlags;
+	const rootHasEffect =
+		(finishedWork.flags & (MutationMask | PassiveMask)) !== NoFlags;
 
 	if (subtreeHasEffect || rootHasEffect) {
 		// 判断是否存在3个子阶段需要执行的操作
 		// beforeMutation
 
-		// mutation Placement
+		// 阶段2/3 mutation Placement
 		commitMutationEffects(finishedWork, root);
 		// current和workInProgress交换
 		root.current = finishedWork;
+
+		// 阶段3/3:Layout
+		commitLayoutEffects(finishedWork, root);
 
 		// layout
 	} else {
