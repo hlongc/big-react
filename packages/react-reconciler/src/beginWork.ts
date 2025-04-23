@@ -20,8 +20,15 @@ import {
 import { mountChildren, reconcilerChildren } from './childFibers';
 import { renderWithHook } from './fiberHooks';
 import { Lane } from './fiberLanes';
-import { ChildDeletion, Placemement, Ref } from './fiberFlags';
+import {
+	ChildDeletion,
+	DidCapture,
+	NoFlags,
+	Placemement,
+	Ref
+} from './fiberFlags';
 import { pushContext } from './fiberContext';
+import { pushSuspenseHandler } from './suspenseContext';
 
 export function beginWork(wip: FiberNode, renderLane: Lane) {
 	// 递归中的递 返回子节点
@@ -59,14 +66,17 @@ function updateSuspenseComponent(wip: FiberNode) {
 	const current = wip.alternate;
 
 	let showFallback = false;
-	const didSuspense = true;
+	const didSuspense = (wip.flags & DidCapture) !== NoFlags;
 
 	if (didSuspense) {
 		showFallback = true;
+		wip.flags &= ~DidCapture;
 	}
 
 	const nextPrimaryChildren = nextProps.children;
 	const nextFallbackChildren = nextProps.fallback;
+
+	pushSuspenseHandler(wip);
 
 	if (current === null) {
 		// mount
@@ -110,6 +120,10 @@ function updateSuspensePrimaryChildren(wip: FiberNode, primaryChildren: any) {
 		currentPrimaryChildFragment,
 		primaryProps
 	);
+
+	wip.child = primaryChildFragment;
+	primaryChildFragment.return = wip;
+	primaryChildFragment.sibling = null;
 	// 删除fallback节点
 	if (currentFallbackChildFragment) {
 		if (wip.deletion === null) {
@@ -120,10 +134,6 @@ function updateSuspensePrimaryChildren(wip: FiberNode, primaryChildren: any) {
 			// 这里为什么不调整flags呢，因为如果存在这个数组，说明flag已经存在ChildDeletion了
 		}
 	}
-
-	wip.child = primaryChildFragment;
-	primaryChildFragment.return = wip;
-	primaryChildFragment.sibling = null;
 
 	return primaryChildFragment;
 }
@@ -150,9 +160,11 @@ function updateSuspenseFallbackChildren(
 	let fallbackChildFragment;
 
 	if (currentFallbackChildFragment) {
-		fallbackChildFragment = createWornInProgress(currentFallbackChildFragment, {
-			children: fallbackChildren
-		});
+		console.log('fallbackChildren', fallbackChildren);
+		fallbackChildFragment = createWornInProgress(
+			currentFallbackChildFragment,
+			fallbackChildren
+		);
 	} else {
 		fallbackChildFragment = createFiberFromFragment(fallbackChildren, null);
 		fallbackChildFragment.flags |= Placemement;
@@ -192,7 +204,7 @@ function mountSuspenseFallbackChildren(
 
 	const primaryChildFragment = createFiberFromOffScreen(primaryProps);
 	const fallbackChildFragment = createFiberFromFragment(fallbackChildren, null);
-
+	// 父组件Suspense已经mount，所以需要fallback标记Placement
 	fallbackChildFragment.flags |= Placemement;
 
 	primaryChildFragment.return = wip;
@@ -253,6 +265,12 @@ function updateHostRoot(wip: FiberNode, renderLane: Lane) {
 		renderLane
 	);
 	wip.memoziedState = memoziedState;
+
+	const current = wip.alternate;
+	// 考虑RootDidNotComplete的情况，需要复用memoizedState
+	if (current !== null) {
+		current.memoziedState = memoziedState;
+	}
 
 	const nextChilren = wip.memoziedState as ReactElementType;
 	reconcileChildren(wip, nextChilren);

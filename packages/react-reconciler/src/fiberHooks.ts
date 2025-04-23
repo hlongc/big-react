@@ -361,7 +361,7 @@ function updateWorkInProgressHook(): Hook {
 		// 上一次  u1 u2 u3
 		// 本次    u1 u2 u3 u4
 		throw new Error(
-			`组件${currentlyRenderingFiber?.type}本次执行时hook顺序不一致`
+			`组件${currentlyRenderingFiber?.type.name}本次执行时hook顺序不一致`
 		);
 	}
 
@@ -441,4 +441,10 @@ function use<T>(usable: Usable<T>): T {
 	}
 
 	throw new TypeError('不支持的类型' + usable);
+}
+
+export function resetHookOnUnwind() {
+	currentlyRenderingFiber = null;
+	currentHook = null;
+	workInProgressHook = null;
 }

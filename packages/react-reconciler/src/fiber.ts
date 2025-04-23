@@ -1,9 +1,10 @@
-import { Props, Key, Ref, ReactElementType } from 'shared/ReactTypes';
+import { Props, Key, Ref, ReactElementType, Wakeable } from 'shared/ReactTypes';
 import {
 	ContextProvider,
 	Fragment,
 	FunctionComponent,
 	HostComponent,
+	OffScreenComponent,
 	SuspenseComponent,
 	WorkTag
 } from './workTags';
@@ -33,7 +34,7 @@ export class FiberNode {
 	// 在子元素中的顺序
 	index: number;
 
-	ref: Ref;
+	ref: Ref | null;
 	// 即将更新的props
 	pendingProps: Props;
 	// 现在的props
@@ -91,6 +92,8 @@ export class FiberRootNode {
 	/** 正在调度的回调 */
 	callbackNode: CallbackNode | null;
 	callbackPriority: Lane;
+	// 保存use的处理结果，不重复处理
+	pingCache: WeakMap<Wakeable<any>, Set<Lane>> | null;
 
 	constructor(container: Container, hostRootFiber: FiberNode) {
 		// React.createRoot(container).render(<App />)
@@ -107,6 +110,7 @@ export class FiberRootNode {
 			unmount: [],
 			update: []
 		};
+		this.pingCache = null;
 	}
 }
 
@@ -171,7 +175,7 @@ export function createFiberFromFragment(child: any[], key: Key) {
 }
 
 export function createFiberFromOffScreen(nextProps: OffScreenProps) {
-	const fiber = new FiberNode(SuspenseComponent, nextProps, null);
+	const fiber = new FiberNode(OffScreenComponent, nextProps, null);
 
 	return fiber;
 }
